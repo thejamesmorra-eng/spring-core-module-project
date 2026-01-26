@@ -14,19 +14,19 @@ public class UserService {
 
     private static final AtomicLong USER_ID_COUNTER = new AtomicLong(1);
 
-    private final AccountService accountService;
+    //private final AccountService accountService;
 
     private Map<Long, User> users = new HashMap<>();
 
-    public UserService(AccountService accountService) {
-        this.accountService = accountService;
-    }
+//    public UserService(AccountService accountService) {
+//        this.accountService = accountService;
+//    }
 
-    public String createUser(String login) {
+    public User createUser(String login) {
         User user = new User(USER_ID_COUNTER.getAndIncrement(), login);
-        user.getAccountList().add(accountService.createAccount(user.getId()));
+        //user.getAccountList().add(accountService.createAccount(user.getId()));
         users.put(user.getId(), user);
-        return user.toString();
+        return user;
     }
 
     public User getUserById(Long id) {
