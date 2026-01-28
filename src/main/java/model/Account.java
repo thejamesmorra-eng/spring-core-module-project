@@ -1,7 +1,5 @@
 package model;
 
-import org.springframework.beans.factory.annotation.Value;
-
 import java.util.Objects;
 
 public class Account {
