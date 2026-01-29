@@ -12,16 +12,16 @@ public class OperationsConsoleListener {
 
     private final UserService userService;
     private final AccountService accountService;
+    private final Scanner scanner;
 
-    public OperationsConsoleListener(UserService userService, AccountService accountService) {
+    public OperationsConsoleListener(UserService userService, AccountService accountService, Scanner scanner) {
         this.userService = userService;
         this.accountService = accountService;
+        this.scanner = scanner;
     }
 
     public void executor() {
         showMenu();
-
-        Scanner scanner = new Scanner(System.in);
         String operation = scanner.nextLine();
 
         while (!operation.equalsIgnoreCase("EXIT")) {
@@ -34,9 +34,14 @@ public class OperationsConsoleListener {
                         System.out.println("Invalid login, please repeat the input");
                         login = scanner.nextLine();
                     }
-                    long userId = userService.createUser(login);
-                    accountService.createAccount(userId);
-                    System.out.println("User created: " + userService.getUserById(userId));
+
+                    if (!userService.isUserExist(login)) {
+                        long userId = userService.createUser(login);
+                        accountService.createAccount(userId);
+                        System.out.println("User created: " + userService.getUserById(userId));
+                    } else {
+                        System.out.println("Login already exists");
+                    }
                 }
 
                 case "SHOW_ALL_USERS" -> {
@@ -77,31 +82,31 @@ public class OperationsConsoleListener {
                     }
                 }
 
-//                case "ACCOUNT_TRANSFER" -> {
-//                    System.out.println("Enter source account ID:");
-//                    try {
-//                        long idFrom = scanner.nextInt();
-//                        System.out.println("Enter target account ID:");
-//                        long idTo = scanner.nextInt();
-//                        System.out.println("Enter amount to transfer:");
-//                        int transferAmount = scanner.nextInt();
-//                        System.out.println(accountService.transfer(idFrom, idTo, transferAmount));
-//                    } catch (InputMismatchException e) {
-//                        System.out.println("Id(s) is incorrect");
-//                    }
-//                }
+                case "ACCOUNT_TRANSFER" -> {
+                    try {
+                        System.out.println("Enter source account ID:");
+                        long srcAccId = scanner.nextInt();
+                        System.out.println("Enter destination account ID:");
+                        long destAcctId = scanner.nextInt();
+                        System.out.println("Enter transfer amount:");
+                        int transferAmount = scanner.nextInt();
+                        System.out.println(accountService.transfer(srcAccId, destAcctId, transferAmount));
+                    } catch (InputMismatchException e) {
+                        System.out.println("Id(s) is incorrect");
+                    }
+                }
 
-//                case "ACCOUNT_WITHDRAW" -> {
-//                    System.out.println("Enter account ID:");
-//                    try {
-//                        long id = scanner.nextInt();
-//                        System.out.println("Enter amount to withdraw:");
-//                        int amount = scanner.nextInt();
-//                        System.out.println(accountService.withdraw(id, amount));
-//                    } catch (InputMismatchException e) {
-//                        System.out.println("Id or amount is incorrect");
-//                    }
-//                }
+                case "ACCOUNT_WITHDRAW" -> {
+                    System.out.println("Enter account ID:");
+                    try {
+                        long id = scanner.nextInt();
+                        System.out.println("Enter amount to withdraw:");
+                        int amount = scanner.nextInt();
+                        System.out.println(accountService.withdraw(id, amount));
+                    } catch (InputMismatchException e) {
+                        System.out.println("Id or amount is incorrect");
+                    }
+                }
 
                 default -> {
                     System.out.println("Unknown operation, repeat the input");
@@ -110,7 +115,6 @@ public class OperationsConsoleListener {
             showMenu();
             operation = scanner.nextLine();
         }
-
         scanner.close();
     }
 
