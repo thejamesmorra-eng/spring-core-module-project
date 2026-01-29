@@ -28,10 +28,6 @@ public class User {
         return login;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
