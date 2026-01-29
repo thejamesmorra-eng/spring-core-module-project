@@ -38,64 +38,81 @@ public class AccountService {
             return "Incorrect amount, deposit could be more than 0";
         }
 
+        Long userId = accounts.get(accountId);
+        if (userId == null) {
+            return "No such account is found";
+        }
+
+        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
+        for (Account account : userAccountList) {
+            if (account.getId() == accountId) {
+                account.setMoneyAmount(account.getMoneyAmount() + depositAmount);
+            }
+        }
+        return "Amount " + depositAmount +  " deposited to account ID: " + accountId;
     }
 
-//    public String withdraw(Long accountId, int withdrawAmount) {
-//        if (withdrawAmount < 0) {
-//            return "Amount to withdraw must be positive";
-//        }
-//
-//        for (Map.Entry<User, List<Account>> entry : accounts.entrySet()) {
-//            for (Account account : entry.getValue()) {
-//                if (account.getId() == accountId) {
-//                    if (account.getMoneyAmount() < withdrawAmount) {
-//                        return "No such money to withdraw";
-//                    } else {
-//                        account.setMoneyAmount(account.getMoneyAmount() - withdrawAmount);
-//                        return "The withdrawal operation was successful. Your current balance " + account.getMoneyAmount();
-//                    }
-//                }
-//            }
-//        }
-//        return "No such account id is found";
-//    }
+    public String withdraw(long accountId, int withdrawAmount) {
+        if (withdrawAmount < 1) {
+            return "Incorrect amount, withdraw could be more than 0";
+        }
 
-//    public String transfer(Long accountIdFrom, Long accountIdTo, int transferAmount) {
-//        Account accountFrom = null;
-//        Account accountTo = null;
-//
-//        for (Map.Entry<User, List<Account>> entry : accounts.entrySet()) {
-//            for (Account account : entry.getValue()) {
-//                if (account.getId() == accountIdFrom) {
-//                    accountFrom = account;
-//                } else if (account.getId() == accountIdTo) {
-//                    accountTo = account;
-//                }
-//                if (accountFrom == null || accountTo == null) {
-//                    return "No such account is found";
-//                }
-//                if (accountFrom.getUserId() == accountTo.getUserId()) {
-//                    if (accountFrom.getMoneyAmount() < transferAmount) {
-//                        return "No such money to transfer";
-//                    } else {
-//                        deposit(accountIdTo, transferAmount);
-//                        withdraw(accountIdFrom, transferAmount);
-//                        return "Amount " + transferAmount + " transferred from account ID " + accountIdFrom +" to account ID " + accountIdTo + ".";
-//                    }
-//                } else {
-//                    if (accountFrom.getMoneyAmount() < (transferAmount + transferCommission)) {
-//                        return "No such money to transfer with commission";
-//                    } else {
-//                        deposit(accountIdTo, transferAmount);
-//                        withdraw(accountIdFrom, transferAmount + transferCommission);
-//                        return "Amount " + transferAmount + " transferred from account ID " + accountIdFrom +" to account ID " + accountIdTo + "." +
-//                                "Commission is " + transferCommission;
-//                    }
-//                }
-//            }
-//        }
-//        return "No such account id is found";
-//    }
+        Long userId = accounts.get(accountId);
+        if (userId == null) {
+            return "No such account is found";
+        }
+
+        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
+        for (Account account : userAccountList) {
+            if (account.getId() == accountId) {
+                if (account.getMoneyAmount() < withdrawAmount) {
+                    return "Not enough money for withdrawal. Available amount is " + account.getMoneyAmount();
+                } else {
+                    account.setMoneyAmount(account.getMoneyAmount() - withdrawAmount);
+                }
+            }
+        }
+        return "Amount " + withdrawAmount +  " withdrawn from account ID: " + accountId;
+    }
+
+    public String transfer(long accountIdSource, long accountIdDestination, int transferAmount) {
+        if (accountIdSource == accountIdDestination) {
+            return "Source account id and destination is the same";
+        }
+
+        Long userIdSource = accounts.get(accountIdSource);
+        Long userIdDestination = accounts.get(accountIdDestination);
+
+        if (userIdSource == null || userIdDestination == null) {
+            return "Invalid sender or recipient ID";
+        }
+
+        Account sourceAccount = getUserAccount(accountIdSource);
+        Account destAccount = getUserAccount(accountIdDestination);
+
+        if (sourceAccount == null || destAccount == null) {
+            return "Check account ID, some of them is wrong";
+        }
+
+        int srcAccMoneyAmount = sourceAccount.getMoneyAmount();
+        int destAccMoneyAmount = destAccount.getMoneyAmount();
+
+        if (Objects.equals(accounts.get(accountIdSource), accounts.get(accountIdDestination))) {
+            if (srcAccMoneyAmount < transferAmount) {
+                return "Not enough money";
+            }
+            sourceAccount.setMoneyAmount(srcAccMoneyAmount - transferAmount);
+            destAccount.setMoneyAmount(destAccMoneyAmount + transferAmount);
+            return "The transfer was successful";
+        } else {
+            if (srcAccMoneyAmount < (transferAmount + transferCommission)) {
+                return "Not enough money";
+            }
+            sourceAccount.setMoneyAmount(srcAccMoneyAmount - (transferAmount + transferCommission));
+            destAccount.setMoneyAmount(destAccMoneyAmount + transferAmount);
+            return "The transfer was successful";
+        }
+    }
 
     public String closeAccount(Long accountId) {
         Long userId = accounts.get(accountId);
@@ -113,7 +130,6 @@ public class AccountService {
             Iterator<Account> iterator = userAccountList.iterator();
             Account accountToClose = null;
 
-            System.out.println(userAccountList.size());
             while (iterator.hasNext()) {
                 Account account = iterator.next();
                 if (account.getId() == accountId) {
@@ -121,7 +137,6 @@ public class AccountService {
                     iterator.remove();
                 }
             }
-            System.out.println(userAccountList.size());
 
             userAccountList.sort(new Comparator<Account>() {
                 @Override
@@ -134,5 +149,16 @@ public class AccountService {
             firstAccount.setMoneyAmount(firstAccount.getMoneyAmount() + accountToClose.getMoneyAmount());
         }
         return "Account with ID " + accountId + " has been closed.";
+    }
+
+    private Account getUserAccount(Long accountId) {
+        Long userId = accounts.get(accountId);
+        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
+        for (Account account : userAccountList) {
+            if (account.getId() == accountId) {
+                return account;
+            }
+        }
+        return null;
     }
 }
