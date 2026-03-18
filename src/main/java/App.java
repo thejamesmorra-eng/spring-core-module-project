@@ -1,13 +1,13 @@
-import conf.AppConf;
-import listener.OperationsConsoleListener;
+import config.AppConfig;
+import console.ConsoleListener;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 public class App {
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConf.class);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
-        OperationsConsoleListener operationsConsoleListener = context.getBean(OperationsConsoleListener.class);
-        operationsConsoleListener.executor();
+        ConsoleListener consoleListener = context.getBean(ConsoleListener.class);
+        consoleListener.executor();
 
         context.close();
     }

@@ -6,9 +6,9 @@ import java.util.Objects;
 
 public class User {
 
-    private final long id;
+    private final Long id;
+    private final String login;
     private final List<Account> accountList;
-    private String login;
 
     public User(long id, String login) {
         this.id = id;
@@ -20,19 +20,19 @@ public class User {
         return id;
     }
 
-    public List<Account> getAccountList() {
-        return accountList;
-    }
-
     public String getLogin() {
         return login;
+    }
+
+    public List<Account> getAccountList() {
+        return accountList;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
-        return id == user.id && Objects.equals(accountList, user.accountList) && Objects.equals(login, user.login);
+        return id.equals(user.id) && Objects.equals(accountList, user.accountList) && Objects.equals(login, user.login);
     }
 
     @Override

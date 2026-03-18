@@ -1,4 +1,4 @@
-package listener;
+package console;
 
 import org.springframework.stereotype.Service;
 import service.AccountService;
@@ -8,13 +8,13 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 
 @Service
-public class OperationsConsoleListener {
+public class ConsoleListener {
 
     private final UserService userService;
     private final AccountService accountService;
     private final Scanner scanner;
 
-    public OperationsConsoleListener(UserService userService, AccountService accountService, Scanner scanner) {
+    public ConsoleListener(UserService userService, AccountService accountService, Scanner scanner) {
         this.userService = userService;
         this.accountService = accountService;
         this.scanner = scanner;

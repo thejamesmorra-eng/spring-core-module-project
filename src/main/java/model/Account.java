@@ -4,8 +4,8 @@ import java.util.Objects;
 
 public class Account {
 
-    private final long id;
-    private final long userId;
+    private final Long id;
+    private final Long userId;
     private int moneyAmount;
 
     public Account(long userId, long id, int initBalance) {
@@ -34,7 +34,7 @@ public class Account {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Account account)) return false;
-        return id == account.id && userId == account.userId && moneyAmount == account.moneyAmount;
+        return id.equals(account.id) && userId.equals(account.userId) && moneyAmount == account.moneyAmount;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package conf;
+package config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -9,8 +9,8 @@ import java.util.Scanner;
 
 @Configuration
 @PropertySource("classpath:application.properties")
-@ComponentScan(basePackages = {"listener, service, conf"})
-public class AppConf {
+@ComponentScan(basePackages = {"console, service, config"})
+public class AppConfig {
 
     @Bean
     public Scanner scanner() {
