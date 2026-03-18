@@ -1,164 +1,120 @@
 package service;
 
+import config.AccountProperties;
 import model.Account;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class AccountService {
 
-    private static final AtomicLong ACCOUNT_ID_COUNTER = new AtomicLong(1);
-    private final UserService userService;
+    private final AtomicInteger ACCOUNT_ID_COUNTER = new AtomicInteger(1);
+    private final Map<Integer, Account> accounts;
+    private final AccountProperties accountProperties;
 
-    // Map<AccountId, UserId> accounts
-    private Map<Long, Long> accounts = new HashMap<>();
-
-    @Value("${account.default-amount}")
-    private int initBalance;
-
-    @Value("${account.transfer-commission}")
-    private int transferCommission;
-
-    public AccountService(UserService userService) {
-        this.userService = userService;
+    public AccountService(AccountProperties accountProperties) {
+        this.accounts = new HashMap<>();
+        this.accountProperties = accountProperties;
     }
 
-    public Long createAccount(Long userId) {
-        Account account = new Account(userId, ACCOUNT_ID_COUNTER.getAndIncrement(), initBalance);
-        userService.getUserById(userId).getAccountList().add(account);
-        accounts.put(account.getId(), userId);
-        return account.getId();
+    public Account createAccount(Integer userId) {
+        Account account = new Account(ACCOUNT_ID_COUNTER.getAndIncrement(), userId, accountProperties.getInitBalance());
+        accounts.put(account.getId(), account);
+        return account;
     }
 
-    public String deposit(long accountId, int depositAmount) {
+    public void deposit(Integer accountId, int depositAmount) {
+        Account account = accounts.get(accountId);
+        if (account == null) {
+            throw new IllegalArgumentException("Error: There is no such account");
+        }
         if (depositAmount < 1) {
-            return "Incorrect amount, deposit could be more than 0";
+            throw new IllegalArgumentException("Error: The deposit amount must be more than 0");
         }
-
-        Long userId = accounts.get(accountId);
-        if (userId == null) {
-            return "No such account is found";
-        }
-
-        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
-        for (Account account : userAccountList) {
-            if (account.getId() == accountId) {
-                account.setMoneyAmount(account.getMoneyAmount() + depositAmount);
-            }
-        }
-        return "Amount " + depositAmount +  " deposited to account ID: " + accountId;
+        int currAccBalance = account.getMoneyAmount();
+        account.setMoneyAmount(currAccBalance + depositAmount);
     }
 
-    public String withdraw(long accountId, int withdrawAmount) {
+    public void withdraw(Integer accountId, int withdrawAmount) {
+        Account account = accounts.get(accountId);
+        if (account == null) {
+            throw new IllegalArgumentException("Error: There is no such account");
+        }
         if (withdrawAmount < 1) {
-            return "Incorrect amount, withdraw could be more than 0";
+            throw new IllegalArgumentException("Error: The withdraw amount must be more than 0");
         }
-
-        Long userId = accounts.get(accountId);
-        if (userId == null) {
-            return "No such account is found";
+        int currAccBalance = account.getMoneyAmount();
+        if (currAccBalance < withdrawAmount) {
+            throw new IllegalArgumentException("Error: insufficient funds on account id=" + accountId +
+                    ", moneyAmount=" + currAccBalance +
+                    ", attempted withdraw=" + withdrawAmount);
         }
-
-        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
-        for (Account account : userAccountList) {
-            if (account.getId() == accountId) {
-                if (account.getMoneyAmount() < withdrawAmount) {
-                    return "Not enough money for withdrawal. Available amount is " + account.getMoneyAmount();
-                } else {
-                    account.setMoneyAmount(account.getMoneyAmount() - withdrawAmount);
-                }
-            }
-        }
-        return "Amount " + withdrawAmount +  " withdrawn from account ID: " + accountId;
+        account.setMoneyAmount(currAccBalance - withdrawAmount);
     }
 
-    public String transfer(long accountIdSource, long accountIdDestination, int transferAmount) {
-        if (accountIdSource == accountIdDestination) {
-            return "Source account id and destination is the same";
+    public void transfer(Integer sourceAccountId, Integer destAccountId, int transferAmount) {
+        Account sourceAcc = accounts.get(sourceAccountId);
+        Account destAcc = accounts.get(destAccountId);
+        if (sourceAcc == null || destAcc == null) {
+            throw new IllegalArgumentException("Error: Not found specified account"); // Change
+        }
+        if (transferAmount < 1) {
+            throw new IllegalArgumentException("Error: Amount to transfer must be more 0");
         }
 
-        Long userIdSource = accounts.get(accountIdSource);
-        Long userIdDestination = accounts.get(accountIdDestination);
+        boolean isSelfTransfer = sourceAcc.getUserId().equals(destAcc.getUserId());
 
-        if (userIdSource == null || userIdDestination == null) {
-            return "Invalid sender or recipient ID";
-        }
-
-        Account sourceAccount = getUserAccount(accountIdSource);
-        Account destAccount = getUserAccount(accountIdDestination);
-
-        if (sourceAccount == null || destAccount == null) {
-            return "Check account ID, some of them is wrong";
-        }
-
-        int srcAccMoneyAmount = sourceAccount.getMoneyAmount();
-        int destAccMoneyAmount = destAccount.getMoneyAmount();
-
-        if (Objects.equals(accounts.get(accountIdSource), accounts.get(accountIdDestination))) {
-            if (srcAccMoneyAmount < transferAmount) {
-                return "Not enough money";
+        int sourceAccBalance = sourceAcc.getMoneyAmount();
+        if (isSelfTransfer) {
+            if (sourceAccBalance < transferAmount) {
+                throw new RuntimeException("Error: insufficient funds on account id= " + sourceAccountId +
+                        ", moneyAmount= " + sourceAccBalance +
+                        ", attempted transfer= " + transferAmount);
             }
-            sourceAccount.setMoneyAmount(srcAccMoneyAmount - transferAmount);
-            destAccount.setMoneyAmount(destAccMoneyAmount + transferAmount);
-            return "The transfer was successful";
+            int destAccBalance = destAcc.getMoneyAmount();
+            destAcc.setMoneyAmount(destAccBalance + transferAmount);
+            sourceAcc.setMoneyAmount(sourceAccBalance - transferAmount);
         } else {
-            if (srcAccMoneyAmount < (transferAmount + transferCommission)) {
-                return "Not enough money";
+            int commission = accountProperties.getTransferCommission();
+            if (sourceAccBalance < transferAmount + commission) {
+                throw new IllegalStateException("Error: insufficient funds on account id= " + sourceAccountId +
+                        ", moneyAmount= " + sourceAccBalance +
+                        ", attempted transfer= " + (transferAmount + commission));
             }
-            sourceAccount.setMoneyAmount(srcAccMoneyAmount - (transferAmount + transferCommission));
-            destAccount.setMoneyAmount(destAccMoneyAmount + transferAmount);
-            return "The transfer was successful";
+            int destAccBalance = destAcc.getMoneyAmount();
+            destAcc.setMoneyAmount(destAccBalance + transferAmount);
+            sourceAcc.setMoneyAmount(sourceAccBalance - (transferAmount + commission));
         }
     }
 
-    public String closeAccount(Long accountId) {
-        Long userId = accounts.get(accountId);
-
-        if (userId == null) {
-            return "No such accountId is found";
+    public Account closeAccount(Integer accountId) {
+        Account accountToClose = accounts.get(accountId);
+        if (accountToClose == null) {
+            throw new IllegalArgumentException("Error: No such account is found");
         }
-
-        int sizeOfUserAccountList = userService.getUserById(userId).getAccountList().size();
-
-        if (sizeOfUserAccountList < 2) {
-            return "You only have one account, and it cannot be deleted";
-        } else {
-            List<Account> userAccountList = userService.getUserById(userId).getAccountList();
-            Iterator<Account> iterator = userAccountList.iterator();
-            Account accountToClose = null;
-
-            while (iterator.hasNext()) {
-                Account account = iterator.next();
-                if (account.getId() == accountId) {
-                    accountToClose = account;
-                    iterator.remove();
-                }
-            }
-
-            userAccountList.sort(new Comparator<Account>() {
-                @Override
-                public int compare(Account o1, Account o2) {
-                    return (int) (o1.getId() - o2.getId());
-                }
-            });
-
-            Account firstAccount = userAccountList.getFirst();
-            firstAccount.setMoneyAmount(firstAccount.getMoneyAmount() + accountToClose.getMoneyAmount());
+        Integer userId = accountToClose.getUserId();
+        List<Account> userAccountList = getUserAccountList(userId);
+        if (userAccountList.size() == 1) {
+            throw new IllegalStateException("Error: You have only one account, you cannot close it");
         }
-        return "Account with ID " + accountId + " has been closed.";
+        int accountToCloseBalance = accountToClose.getMoneyAmount();
+        accounts.remove(accountId);
+        if (accountToCloseBalance > 0) {
+            Account firstUserAccount = getUserAccountList(userId).getFirst();
+            deposit(firstUserAccount.getId(), accountToCloseBalance);
+        }
+        return accountToClose;
     }
 
-    private Account getUserAccount(Long accountId) {
-        Long userId = accounts.get(accountId);
-        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
-        for (Account account : userAccountList) {
-            if (account.getId() == accountId) {
-                return account;
-            }
-        }
-        return null;
+    public Optional<Account> getAccountById(Integer accountId) {
+        return Optional.ofNullable(accounts.get(accountId));
+    }
+
+    private List<Account> getUserAccountList(Integer userId) {
+        return accounts.values().stream()
+                .filter(account -> Objects.equals(account.getUserId(), userId))
+                .toList();
     }
 }
