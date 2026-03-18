@@ -1,7 +1,7 @@
 package service;
 
+import config.AccountProperties;
 import model.Account;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -11,31 +11,25 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AccountService {
 
     private static final AtomicLong ACCOUNT_ID_COUNTER = new AtomicLong(1);
+    private final Map<Long, Account> accounts = new HashMap<>();
     private final UserService userService;
+    private final AccountProperties accountProperties;
 
-    // Map<AccountId, UserId> accounts
-    private Map<Long, Long> accounts = new HashMap<>();
-
-    @Value("${account.default-amount}")
-    private int initBalance;
-
-    @Value("${account.transfer-commission}")
-    private int transferCommission;
-
-    public AccountService(UserService userService) {
+    public AccountService(UserService userService, AccountProperties accountProperties) {
         this.userService = userService;
+        this.accountProperties = accountProperties;
     }
 
-    public Long createAccount(Long userId) {
-        Account account = new Account(userId, ACCOUNT_ID_COUNTER.getAndIncrement(), initBalance);
-        userService.getUserById(userId).getAccountList().add(account);
-        accounts.put(account.getId(), userId);
-        return account.getId();
+    public Account createAccount(Long userId) {
+        Account account = new Account(ACCOUNT_ID_COUNTER.getAndIncrement(), userId, accountProperties.getInitBalance());
+        accounts.put(account.getId(), account);
+        userService.addAccountToUser(userId, account);
+        return account;
     }
 
-    public String deposit(long accountId, int depositAmount) {
+    public String deposit(Long accountId, int depositAmount) {
         if (depositAmount < 1) {
-            return "Incorrect amount, deposit could be more than 0";
+            throw new RuntimeException("Incorrect amount, deposit could be more than 0")
         }
 
         Long userId = accounts.get(accountId);

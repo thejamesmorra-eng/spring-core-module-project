@@ -8,17 +8,17 @@ public class Account {
     private final Long userId;
     private int moneyAmount;
 
-    public Account(long userId, long id, int initBalance) {
+    public Account(Long id, Long userId, int initBalance) {
         this.id = id;
         this.userId = userId;
         this.moneyAmount = initBalance;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public long getUserId() {
+    public Long getUserId() {
         return userId;
     }
 

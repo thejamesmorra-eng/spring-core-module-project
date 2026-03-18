@@ -10,13 +10,13 @@ public class User {
     private final String login;
     private final List<Account> accountList;
 
-    public User(long id, String login) {
+    public User(Long id, String login) {
         this.id = id;
         this.login = login;
         this.accountList = new ArrayList<>();
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 

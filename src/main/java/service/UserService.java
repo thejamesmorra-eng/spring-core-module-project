@@ -1,5 +1,6 @@
 package service;
 
+import model.Account;
 import model.User;
 import org.springframework.stereotype.Service;
 
@@ -13,15 +14,18 @@ import java.util.concurrent.atomic.AtomicLong;
 public class UserService {
 
     private static final AtomicLong USER_ID_COUNTER = new AtomicLong(1);
+    private final Map<Long, User> users = new HashMap<>();
+    private final Set<String> logins = new HashSet<>();
 
-    private Map<Long, User> users = new HashMap<>();
-    private Set<String> logins = new HashSet<>();
-
-    public long createUser(String login) {
-        User user = new User(USER_ID_COUNTER.getAndIncrement(), login);
-        users.put(user.getId(), user);
-        logins.add(login);
-        return user.getId();
+    public User createUser(String login) {
+        if (isUserExist(login)) {
+            throw new RuntimeException("Login already exists");
+        } else {
+            User user = new User(USER_ID_COUNTER.getAndIncrement(), login);
+            users.put(user.getId(), user);
+            logins.add(login);
+            return user;
+        }
     }
 
     public User getUserById(Long id) {
@@ -36,5 +40,9 @@ public class UserService {
 
     public boolean isUserExist(String login) {
         return logins.contains(login);
+    }
+
+    public void addAccountToUser(Long userId, Account account) {
+        users.get(userId).getAccountList().add(account);
     }
 }
