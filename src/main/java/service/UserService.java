@@ -20,12 +20,11 @@ public class UserService {
     public User createUser(String login) {
         if (isUserExist(login)) {
             throw new RuntimeException("Login already exists");
-        } else {
-            User user = new User(USER_ID_COUNTER.getAndIncrement(), login);
-            users.put(user.getId(), user);
-            logins.add(login);
-            return user;
         }
+        User user = new User(USER_ID_COUNTER.getAndIncrement(), login);
+        users.put(user.getId(), user);
+        logins.add(login);
+        return user;
     }
 
     public User getUserById(Long id) {

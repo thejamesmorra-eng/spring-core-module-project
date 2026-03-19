@@ -28,45 +28,35 @@ public class AccountService {
     }
 
     public String deposit(Long accountId, int depositAmount) {
+        Account account = accounts.get(accountId);
+        if (account == null) {
+            throw new RuntimeException("There is no such account");
+        }
         if (depositAmount < 1) {
-            throw new RuntimeException("Incorrect amount, deposit could be more than 0")
+            throw new RuntimeException("The deposit amount must be more than 0");
         }
-
-        Long userId = accounts.get(accountId);
-        if (userId == null) {
-            return "No such account is found";
-        }
-
-        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
-        for (Account account : userAccountList) {
-            if (account.getId() == accountId) {
-                account.setMoneyAmount(account.getMoneyAmount() + depositAmount);
-            }
-        }
-        return "Amount " + depositAmount +  " deposited to account ID: " + accountId;
+        int currAccBalance = account.getMoneyAmount();
+        account.setMoneyAmount(currAccBalance + depositAmount);
+        return "depositFunc"; // Change
     }
 
-    public String withdraw(long accountId, int withdrawAmount) {
+    public String withdraw(Long accountId, int withdrawAmount) {
+        Account account = accounts.get(accountId);
+        if (account == null) {
+            throw new RuntimeException("There is no such account");
+        }
         if (withdrawAmount < 1) {
-            return "Incorrect amount, withdraw could be more than 0";
+            throw new RuntimeException("The withdraw amount must be more than 0");
         }
 
-        Long userId = accounts.get(accountId);
-        if (userId == null) {
-            return "No such account is found";
+        int currAccBalance = account.getMoneyAmount();
+        if (withdrawAmount > currAccBalance) {
+            throw new RuntimeException("Error: insufficient funds on account id= " + accountId +
+                    ", moneyAmount= " + currAccBalance +
+                    ", attempted withdraw= " + withdrawAmount);
         }
-
-        List<Account> userAccountList = userService.getUserById(userId).getAccountList();
-        for (Account account : userAccountList) {
-            if (account.getId() == accountId) {
-                if (account.getMoneyAmount() < withdrawAmount) {
-                    return "Not enough money for withdrawal. Available amount is " + account.getMoneyAmount();
-                } else {
-                    account.setMoneyAmount(account.getMoneyAmount() - withdrawAmount);
-                }
-            }
-        }
-        return "Amount " + withdrawAmount +  " withdrawn from account ID: " + accountId;
+        account.setMoneyAmount(currAccBalance - withdrawAmount);
+        return "WitdrawFunc"; // Change
     }
 
     public String transfer(long accountIdSource, long accountIdDestination, int transferAmount) {
