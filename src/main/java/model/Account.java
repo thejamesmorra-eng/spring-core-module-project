@@ -3,7 +3,7 @@ package model;
 import java.util.Objects;
 
 public class Account {
-
+    // Record???
     private final Long id;
     private final Long userId;
     private int moneyAmount;

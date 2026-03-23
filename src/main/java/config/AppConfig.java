@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 @Configuration
 @PropertySource("classpath:application.properties")
-@ComponentScan(basePackages = {"console, service, config"})
+@ComponentScan(basePackages = {"console, service, config, operations"})
 public class AppConfig {
 
     @Bean
