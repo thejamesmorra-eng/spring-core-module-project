@@ -1,4 +1,19 @@
 package operations.commands;
 
-public class AccountTransferCommand {
+import operations.ConsoleOperationType;
+import operations.OperationCommand;
+import org.springframework.stereotype.Component;
+
+@Component
+public class AccountTransferCommand implements OperationCommand {
+
+    @Override
+    public void execute() {
+
+    }
+
+    @Override
+    public ConsoleOperationType getOperationType() {
+        return ConsoleOperationType.ACCOUNT_TRANSFER;
+    }
 }

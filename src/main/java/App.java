@@ -7,7 +7,7 @@ public class App {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
         ConsoleListener consoleListener = context.getBean(ConsoleListener.class);
-        consoleListener.executor();
+        consoleListener.start();
 
         context.close();
     }

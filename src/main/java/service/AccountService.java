@@ -49,7 +49,6 @@ public class AccountService {
         if (withdrawAmount < 1) {
             throw new RuntimeException("The withdraw amount must be more than 0");
         }
-
         int currAccBalance = account.getMoneyAmount();
         if (currAccBalance > withdrawAmount) {
             throw new RuntimeException("Error: insufficient funds on account id= " + accountId +
@@ -104,9 +103,8 @@ public class AccountService {
         if (accountToClose == null) {
             throw new RuntimeException("No such account is found");
         }
-
         User user = userService.getUserById(accountToClose.getUserId());
-        if (user.getAccountList().size() < 2) {
+        if (user.getAccountList().size() == 1) {
             throw new RuntimeException("Just one account, can not be closed");
         }
         int accountToCloseBalance = accountToClose.getMoneyAmount();
