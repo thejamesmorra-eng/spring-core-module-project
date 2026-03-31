@@ -69,7 +69,7 @@ public class AccountService {
         int sourceAccBalance = sourceAcc.getMoneyAmount();
         if (isSelfTransfer) {
             if (sourceAccBalance < transferAmount) {
-                throw new RuntimeException("Error: insufficient funds on account id= " + sourceAccountId +
+                throw new IllegalStateException("Error: insufficient funds on account id= " + sourceAccountId +
                         ", moneyAmount= " + sourceAccBalance +
                         ", attempted transfer= " + transferAmount);
             }
