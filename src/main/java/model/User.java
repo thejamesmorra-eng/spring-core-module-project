@@ -6,17 +6,17 @@ import java.util.Objects;
 
 public class User {
 
-    private final long id;
+    private final Integer id;
+    private final String login;
     private final List<Account> accountList;
-    private String login;
 
-    public User(long id, String login) {
+    public User(Integer id, String login) {
         this.id = id;
         this.login = login;
         this.accountList = new ArrayList<>();
     }
 
-    public long getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -24,15 +24,11 @@ public class User {
         return accountList;
     }
 
-    public String getLogin() {
-        return login;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
-        return id == user.id && Objects.equals(accountList, user.accountList) && Objects.equals(login, user.login);
+        return id.equals(user.id) && Objects.equals(accountList, user.accountList) && Objects.equals(login, user.login);
     }
 
     @Override

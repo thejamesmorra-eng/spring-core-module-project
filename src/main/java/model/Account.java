@@ -4,21 +4,21 @@ import java.util.Objects;
 
 public class Account {
 
-    private final long id;
-    private final long userId;
+    private final Integer id;
+    private final Integer userId;
     private int moneyAmount;
 
-    public Account(long userId, long id, int initBalance) {
+    public Account(Integer id, Integer userId, int initBalance) {
         this.id = id;
         this.userId = userId;
         this.moneyAmount = initBalance;
     }
 
-    public long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public long getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
@@ -34,7 +34,7 @@ public class Account {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Account account)) return false;
-        return id == account.id && userId == account.userId && moneyAmount == account.moneyAmount;
+        return id.equals(account.id) && userId.equals(account.userId) && moneyAmount == account.moneyAmount;
     }
 
     @Override
